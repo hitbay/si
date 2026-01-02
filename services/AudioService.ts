@@ -13,18 +13,18 @@ class AudioService {
     this.enabled = state;
   }
 
-  private playTone(freq: number, type: OscillatorType, duration: number, volume: number) {
+  private playSquish(freqStart: number, freqEnd: number, duration: number, volume: number, type: OscillatorType = 'sine') {
     if (!this.ctx || !this.enabled) return;
     
     const osc = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
 
     osc.type = type;
-    osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(1, this.ctx.currentTime + duration);
+    osc.frequency.setValueAtTime(freqStart, this.ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(freqEnd, this.ctx.currentTime + duration);
 
     gain.gain.setValueAtTime(volume, this.ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + duration);
+    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duration);
 
     osc.connect(gain);
     gain.connect(this.ctx.destination);
@@ -34,22 +34,26 @@ class AudioService {
   }
 
   playShoot() {
-    this.playTone(440, 'triangle', 0.2, 0.1);
+    // Szybki "whiplash" dźwięk
+    this.playSquish(800, 200, 0.15, 0.1, 'sine');
   }
 
   playExplosion() {
-    this.playTone(150, 'sawtooth', 0.4, 0.15);
+    // Miękki, mokry wybuch
+    this.playSquish(200, 40, 0.4, 0.2, 'triangle');
   }
 
   playDamage() {
-    this.playTone(100, 'square', 0.3, 0.2);
+    // Rezonujący, niski dźwięk uderzenia w tkankę
+    this.playSquish(150, 10, 0.5, 0.25, 'sine');
   }
 
   playNextLevel() {
     if (!this.ctx || !this.enabled) return;
-    this.playTone(523, 'sine', 0.2, 0.1);
-    setTimeout(() => this.playTone(659, 'sine', 0.2, 0.1), 100);
-    setTimeout(() => this.playTone(783, 'sine', 0.4, 0.1), 200);
+    // Biologiczny "puls" zwycięstwa
+    [523, 659, 783, 1046].forEach((f, i) => {
+      setTimeout(() => this.playSquish(f, f/2, 0.3, 0.1, 'sine'), i * 120);
+    });
   }
 }
 
